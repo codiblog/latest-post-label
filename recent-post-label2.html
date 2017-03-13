@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -97,58 +96,118 @@ a:hover {color:#0379C4}
 </head>
 <body>
 
-<div id="related-post" class="related-post"></div>
 <script>
-function getQueryVariable(variable) {
-  var query = window.location.search.substring(1);
-  var vars = query.split("&");
-  for (var i=0;i<vars.length;i++) {
-    var pair = vars[i].split("=");
-    if(pair[0] == variable){return pair[1];}
-  }
-  return(false);
-}
-var labelArray = [],
-    relatedPostConfig = {
-		homePage: getQueryVariable("url"),
-        numPosts: 20,
-        summaryLength: 100,
-        widgetStyle: 2,
-        callBack: function() {
-            var $container = $('#' + this.containerId + ' > ul'),
-                $list = $container.find('li'),
-                innerHeight = $list.first().height(),
-                outerHeight = $list.first().outerHeight(true);
-            // Container & list height setup
-            $container.css({
-                "height": outerHeight * $list.length / 2,
-                "overflow": "hidden"
-            });
-            $list.css({
-                "height": innerHeight,
-                "overflow": "hidden"
-            });
-            // Animation
-            function newsTicker() {
-                window.setTimeout(function() {
-                    $container.find('li:last').stop().animate({
-                        opacity: 0
-                    }, 1000, function() {
-                        $(this).hide().prependTo($container).slideDown(1000, function() {
-                            $(this).stop().animate({
-                                opacity: 1
-                            }, 1000, newsTicker);
-                        });
-                    });
-                }, 3000);
-            } newsTicker();
+function showlatestpostswiththumbs(json) {
+    document.write('<div class="ctbm"><ul class="recent-posts-container">');
+    for (var i = 0; i < posts_no; i++) {
+        var entry = json.feed.entry[i];
+        var posttitle = entry.title.$t;
+        var postsurl;
+        if (i == json.feed.entry.length) break;
+        for (var k = 0; k < entry.link.length; k++) {
+            if (entry.link[k].rel == 'replies' && entry.link[k].type == 'text/html') {
+                var commentstext = entry.link[k].title;
+                var commentsurl = entry.link[k].href;
+            }
+            if (entry.link[k].rel == 'alternate') {
+                postsurl = entry.link[k].href;
+                break;
+            }
         }
-    };
+        var recenthumb;
+        try {
+            recenthumb = entry.media$thumbnail.url.replace("/s72-c/","/w365-h210-c/");
+        } catch (error) {
+            s = entry.content.$t;
+            a = s.indexOf("<img");
+            b = s.indexOf("src=\"", a);
+            c = s.indexOf("\"", b + 5);
+            d = s.substr(b + 5, c - b - 5);
+            if ((a != -1) && (b != -1) && (c != -1) && (d != "")) {
+                recenthumb = d;
+            } else recenthumb = 'http://2.bp.blogspot.com/-C3Mo0iKKiSw/VGdK808U7rI/AAAAAAAAAmI/W7Ae_dsEVAE/s1600/no-thumb.png';
+        }
+        var postdate = entry.published.$t;
+        var showyear = postdate.substring(0, 4);
+        var showmonth = postdate.substring(5, 7);
+        var showday = postdate.substring(8, 10);
+        var monthnames = new Array();
+        monthnames[1] = "Jan";
+        monthnames[2] = "Feb";
+        monthnames[3] = "Mar";
+        monthnames[4] = "Apr";
+        monthnames[5] = "May";
+        monthnames[6] = "Jun";
+        monthnames[7] = "Jul";
+        monthnames[8] = "Aug";
+        monthnames[9] = "Sep";
+        monthnames[10] = "Oct";
+        monthnames[11] = "Nov";
+        monthnames[12] = "Dec";
+        document.write('<li class="recent-posts-list">');
+        if (showpoststhumbs == true)
+            document.write('<a href="' + postsurl + '"><img class="recent-post-thumb" src="' + recenthumb + '"/></a>');
+        document.write('<div class="recent-post-title"><a href="' + postsurl + '" target ="_top">' + posttitle + '</a></div>');
+        if ("content" in entry) {
+            var postcontent = entry.content.$t;
+        } else
+        if ("summary" in entry) {
+            var postcontent = entry.summary.$t;
+        } else var postcontent = "";
+        var re = /<\S[^>]*>/g;
+        postcontent = postcontent.replace(re, "");
+        var posts_details = '';
+        var flag = 0;
+        document.write('<div class="recent-posts-details">');
+        if (posts_date == true) {
+            posts_details = posts_details + monthnames[parseInt(showmonth, 10)] + ' ' + showday + ' ' + showyear;
+            flag = 1;
+        }
+        if (readmorelink == true) {
+            if (flag == 1) posts_details = posts_details + ' | ';
+            posts_details = posts_details + '<a href="' + postsurl + '" class="url" target ="_top">Read more</a>';
+            flag = 1;;
+        }
+        if (showcommentslink == true) {
+            if (flag == 1) {
+                posts_details = posts_details + ' ';
+            }
+            if (commentstext == '1 Comments') commentstext = '1';
+            if (commentstext == '0 Comments') commentstext = '0';
+            if (commentstext == '3 Comments') commentstext = '3';
+            commentstext = '<a href="' + commentsurl + '" target ="_top"><i class="fa fa-commenting-o"></i> ' + commentstext + '</a>';
+            posts_details = posts_details + commentstext;
+            flag = 1;;
+        }
+		document.write('<div class="post-date">');
+        document.write(posts_details);
+		document.write('</div>');
+        if (post_summary == true) {
+            if (postcontent.length < summary_chars) {
+                document.write('<p>' + postcontent + '</p>');
+            } else {
+                postcontent = postcontent.substring(0, summary_chars);
+                var quoteEnd = postcontent.lastIndexOf(" ");
+                postcontent = postcontent.substring(0, quoteEnd);
+                document.write('<p>' + postcontent + '...</p>');
+            } 
+        }
+        document.write('</div>');
+        document.write('</li>');
+    }
+    document.write('</ul></div>');
+}
 </script>
-<script>
-/*! Related Post Widget for Blogger by Taufik Nurrohman => http://gplus.to/tovic */
-var randomRelatedIndex,showRelatedPost;(function(n,m,k){var d={widgetTitle:"<h4>Related Posts New</h4>",widgetStyle:1,homePage:"http://www.kompiajaib.com/",numPosts:7,summaryLength:370,titleLength:"auto",thumbnailSize:200,noImage:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAA3NCSVQICAjb4U/gAAAADElEQVQImWOor68HAAL+AX7vOF2TAAAAAElFTkSuQmCC",containerId:"related-post",newTabLink:false,moreText:"Baca Selengkapnya",callBack:function(){}};for(var f in relatedPostConfig){d[f]=(relatedPostConfig[f]=="undefined")?d[f]:relatedPostConfig[f]}var j=function(a){var b=m.createElement("script");b.type="text/javascript";b.src=a;k.appendChild(b)},o=function(b,a){return Math.floor(Math.random()*(a-b+1))+b},l=function(a){var p=a.length,c,b;if(p===0){return false}while(--p){c=Math.floor(Math.random()*(p+1));b=a[p];a[p]=a[c];a[c]=b}return a},e=(typeof labelArray=="object"&&labelArray.length>0)?"/-/"+l(labelArray)[0]:"",h=function(b){var c=b.feed.openSearch$totalResults.$t-d.numPosts,a=o(1,(c>0?c:1));j(d.homePage.replace(/\/$/,"")+"/feeds/posts/summary"+e+"?alt=json-in-script&orderby=updated&start-index="+a+"&max-results="+d.numPosts+"&callback=showRelatedPost")},g=function(z){var s=document.getElementById(d.containerId),x=l(z.feed.entry),A=d.widgetStyle,c=d.widgetTitle+'<ul class="related-post-style-'+A+'">',b=d.newTabLink?' target="_blank"':"",y='<span style="display:block;clear:both;"></span>',v,t,w,r,u;if(!s){return}for(var q=0;q<d.numPosts;q++){if(q==x.length){break}t=x[q].title.$t;w=(d.titleLength!=="auto"&&d.titleLength<t.length)?t.substring(0,d.titleLength)+"&hellip;":t;r=("media$thumbnail"in x[q]&&d.thumbnailSize!==false)?x[q].media$thumbnail.url.replace(/\/s[0-9]+(\-c)?/, "/s"+d.thumbnailSize):d.noImage;u=("summary"in x[q]&&d.summaryLength>0)?x[q].summary.$t.replace(/<br ?\/?>/g," ").replace(/<.*?>/g,"").replace(/[<>]/g,"").substring(0,d.summaryLength)+"&hellip;":"";for(var p=0,a=x[q].link.length;p<a;p++){v=(x[q].link[p].rel=="alternate")?x[q].link[p].href:"#"}if(A==2){c+='<li><a href="'+v+'" title="'+t+'"'+b+' target="_blank"><img alt="" class="related-post-item-thumbnail" src="'+r+'" width="'+d.thumbnailSize+'" height="'+d.thumbnailSize+'"></a><a class="related-post-item-title" title="'+t+'" href="'+v+'"'+b+" target='_blank'>"+w+'</a><span class="related-post-item-summary"><span class="related-post-item-summary-text">'+u+'</span> <a href="'+v+'" class="related-post-item-more"'+b+">"+d.moreText+"</a></span>"+y+"</li>"}else{if(A==3||A==4){c+='<li class="related-post-item" tabindex="0"><a class="related-post-item-title" href="'+v+'"'+b+' target="_blank"><img alt="" class="related-post-item-thumbnail" src="'+r+'" width="'+d.thumbnailSize+'" height="'+d.thumbnailSize+'"></a><div class="related-post-item-tooltip"><a class="related-post-item-title" title="'+t+'" href="'+v+'"'+b+" target='_blank'>"+w+"</a></div>"+y+"</li>"}else{if(A==5){c+='<li class="related-post-item" tabindex="0"><a class="related-post-item-wrapper" href="'+v+'" title="'+t+'"'+b+' target="_blank"><img alt="" class="related-post-item-thumbnail" src="'+r+'" width="'+d.thumbnailSize+'" height="'+d.thumbnailSize+'"><span class="related-post-item-tooltip">'+w+"</span></a>"+y+"</li>"}else{if(A==6){c+='<li><a class="related-post-item-title" title="'+t+'" href="'+v+'"'+b+" target='_blank'>"+w+'</a><div class="related-post-item-tooltip"><img alt="" class="related-post-item-thumbnail" src="'+r+'" width="'+d.thumbnailSize+'" height="'+d.thumbnailSize+'"><span class="related-post-item-summary"><span class="related-post-item-summary-text">'+u+"</span></span>"+y+"</div></li>"}else{c+='<li><a title="'+t+'" href="'+v+'"'+b+" target='_blank'>"+w+"</a></li>"}}}}}s.innerHTML=c+="</ul>"+y;d.callBack()};randomRelatedIndex=h;showRelatedPost=g;j(d.homePage.replace(/\/$/,"")+"/feeds/posts/summary"+e+"?alt=json-in-script&orderby=updated&max-results=0&callback=randomRelatedIndex")})(window,document,document.getElementsByTagName("head")[0]);
+<script style="text/javascript">
+var posts_no = 3;
+var showpoststhumbs = true;
+var readmorelink = false;
+var showcommentslink = false;
+var posts_date = false;
+var post_summary = true;
+var summary_chars = 150;
 </script>
+<script src="/feeds/posts/default?orderby=published&alt=json-in-script&callback=showlatestpostswiththumbs"></script>
 
 </body>
 </html>
