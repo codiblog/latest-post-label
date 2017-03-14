@@ -209,5 +209,10 @@ var summary_chars = 150;
 </script>
 <script src="https://blogone-jr.blogspot.com/feeds/posts/default?orderby=published&alt=json-in-script&callback=showlatestpostswiththumbs"></script>
 
+<script>
+	$('.separator').find('img').replaceWith(function () {
+   return '<amp-img src="'+this.src+'" width="1080" height="610" layout="responsive" alt="'+this.alt+'"></amp-img>'
+});
+	</script>
 </body>
 </html>
