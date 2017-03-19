@@ -88,30 +88,6 @@ a:hover {color:#0379C4}
 </style>
 </head>
 <body>
-	
-	<script>
-window.addEventListener('message', receiveMessage, false);
-function receiveMessage(event) {
-  if (event.data) {
-   var msg;
-   try {
-    msg = JSON.parse(event.data);
-   } catch (err) {
-    // Do nothing
-   }
-   if (!msg)
-    return false;
-   if (msg.name === 'resize') {
-    window.parent.postMessage({
-      sentinel: 'amp',
-      type: 'embed-size',
-      height: msg.data.height
-    }, '*');
-   }
-  }
-}
-</script>
-
 
 <div id="related-post" class="related-post"></div>
 <script>
